@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bf90d3fe-670c-4b8f-9695-23cac8d3dd94" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="e26caeba-ac92-4ddc-8bea-317294a58b76" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="ESK379170@e" database="listOf_Product" />
+	</db:config>
+	<sub-flow name="fetchData" doc:id="3252fd7a-38a6-4807-8986-59dc3acb2d2f" >
+		<db:select doc:name="fetchproduct" doc:id="1b35cb33-db61-4c27-af7e-7aa8afd7f562" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from laptops]]></db:sql>
+		</db:select>
+	</sub-flow>
+	<flow name="flowOne" doc:id="1f3bc700-6599-4270-85b8-6b5628644e95" >
+		<http:listener doc:name="Listener" doc:id="e2f91629-a094-46d0-b083-48749252f5a5" config-ref="HTTP_Listener_config" path="/dataxml"/>
+		<flow-ref doc:name="Flow Reference" doc:id="d8f527ed-34f0-4870-a757-ba373ba52c6a" name="fetchData"/>
+		<ee:transform doc:name="Transform Message" doc:id="6bd0b000-8b9d-4fa0-a612-2779bdb2cc9e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+products:{
+	product: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="databaseFlow" doc:id="0c4fa1be-914d-4304-892a-771b4de9b7e4" >
+		<http:listener doc:name="Listener" doc:id="d6d583b4-c909-4df3-822c-579d4f0a85b7" config-ref="HTTP_Listener_config" path="/data"/>
+		<flow-ref doc:name="Flow Reference" doc:id="d3c427ff-8300-4962-8013-8aebb43b970b" name="fetchData"/>
+		<ee:transform doc:name="Transform Message" doc:id="49f304b6-b5d1-4a4a-b8ce-1d4a588c9bfe" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
